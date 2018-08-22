@@ -3,6 +3,7 @@ from pathlib import Path
 from glob import glob
 import pandas as pd
 import lasio
+from shutil import rmtree
 
 '''
     Reads the log names and log paths from the current working directory
@@ -48,6 +49,33 @@ def write_lognames(cwd, lognames):
         writer.save()
 
 '''
+    Each log directory has many sub directories with many data files in it.
+    In this project only LOGS and WELL_PATH relevant
+    This deletes the other directories
+'''
+def delete_subdirectories(logpaths):
+    relevant_dirs = ["LOGS", "WELL_PATH"]
+    for path in logpaths:
+        for dir in os.listdir(path):
+            if dir not in relevant_dirs:
+                rmtree(os.path.join(path, dir))
+
+'''
+    For fitting the Gaussian Mixture Model, we only need the las files 
+    that have the substring "Composite" in their name.
+    This deletes the las files without the substring Composite
+'''
+def delete_las_files(logpaths):
+    substr = "COMPOSITE"
+    for path in logpaths:
+        # cd to LOGS folder from the logpath:
+        path = os.path.join(path, "LOGS")
+        # deletes the las files that don't have the substring in their name
+        for dir in os.listdir(path):
+            if substr not in dir:
+                os.remove(os.path.join(path, dir))
+
+'''
     Reads the features:
     Depth, Slowness, Bulk Density, Gamma Ray, Neutron Porosity and 
     Deep Resistivity
@@ -55,6 +83,10 @@ def write_lognames(cwd, lognames):
     If any of these features is equal to -999.2500, that means data is
     undefined for that depth, hence all the measurements in that depth
     are ignored.
+    DEPTH -> DEPT.M
+    GAMMA RAY -> GR
+    NEUTRON POROSITY -> NEUT, CN , NPHI, NEU
+    BULK DENSITY -> DEN, RHOB
 '''
 def read_features(path):
     # cd to LOGS folder from the logpath:
@@ -62,28 +94,38 @@ def read_features(path):
         path = os.path.join(path, "LOGS")
 
     # reads the las file from the path into a dataframe.
-    # There is only one dir in the LOGS directory.
-    # The others were deleted manually.
-    # This needed to be done by a human to validate las file is well structured
-    # and meets the criteria of the project in various aspects. 
+    # Las files that don't have the substring "COMPOSITE" in their names were 
+    # deleted from the LOGS directory using the function delete_subdirectories
+    # Results of the deletion were validated by a human to make sure that the 
+    # las files are well structured and meet the criteria of the project in 
+    # various aspects. 
     for dir in os.listdir(path):
         laspath = os.path.join(path, dir)
         las = lasio.read(laspath)
         df = las.df()
     
-    # Removes the columns other than Depth, Slowness, Bulk Density, Gamma Ray, 
-    # Neutron Porosity and Deep Resistivity:
+    # Removes the columns other than Depth, Gamma Ray, Neutron Porosity and
+    # Bulk Density:
+    
+    features = ['DEPT.M', 'GR', 'NEUT', 'CN' , 'NPHI', 'NEU', 'DEN', 'RHOB']
+    df = df.filter(features)
 
     # Removes bad data (-999.2500, explained in the function definition):
-
+    df = df.dropna()
     return df
-
 
 def main():
     cwd = os.getcwd()
     lognames, logpaths = read_lognames(cwd)
+    print(len(lognames))
     print(lognames[0], logpaths[0])
-    read_features(logpaths[0])
+    delete_subdirectories(logpaths)
+    delete_las_files(logpaths)
+    for path in logpaths:
+        print(path)
+        df = read_features(path)
+        print(df.head())
+    
 
 
 if __name__ == '__main__':

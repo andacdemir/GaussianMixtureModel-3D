@@ -28,7 +28,7 @@ def plot_data(data, standardize):
     # slowness, bulk density, GR, neutron porosity, deep resistivity
     # Log transformation on 
     if standardize == False:
-        data[:,4]=np.log10(data[:,4])
+        data[:,4] = np.log10(data[:,4])
 
     plt.subplot(221)
     plt.plot(data[:,0], data[:,4],'.')
