@@ -85,8 +85,8 @@ def delete_las_files(logpaths):
     are ignored.
     DEPTH -> DEPT.M
     GAMMA RAY -> GR
-    NEUTRON POROSITY -> NEUT, CN , NPHI, NEU
-    BULK DENSITY -> DEN, RHOB
+    NEUTRON POROSITY -> NEUT, CN, CNC, NPHI, NEU
+    BULK DENSITY -> DEN, ZDEN, RHOB
 '''
 def read_features(path):
     # cd to LOGS folder from the logpath:
@@ -107,7 +107,8 @@ def read_features(path):
     # Removes the columns other than Depth, Gamma Ray, Neutron Porosity and
     # Bulk Density:
     
-    features = ['DEPT.M', 'GR', 'NEUT', 'CN' , 'NPHI', 'NEU', 'DEN', 'RHOB']
+    features = ['DEPT.M', 'GR', 'NEUT', 'CN', 'CNC', 'NPHI', 'NEU', 'DEN', 
+                'RHOB', 'ZDEN']
     df = df.filter(features)
 
     # Removes bad data (-999.2500, explained in the function definition):
