@@ -25,7 +25,7 @@ def read_data():
 '''
 def plot_data(data, standardize):
     # Columns of the feature vectors by order:
-    # slowness, bulk density, GR, deep resistivity, neutron porosity
+    # slowness, bulk density, GR, neutron porosity, deep resistivity
     # Log transformation on 
     if standardize == False:
         data[:,4]=np.log10(data[:,4])

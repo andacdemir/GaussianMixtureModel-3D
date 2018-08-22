@@ -2,11 +2,12 @@ import os
 from pathlib import Path 
 from glob import glob
 import pandas as pd
+import lasio
 
 '''
     Reads the log names and log paths from the current working directory
 '''
-def read__logname(cwd):
+def read_lognames(cwd):
     try:
         filepath = os.path.join(Path(cwd), "B15_DATA")
         if not os.path.exists(filepath):
@@ -45,12 +46,44 @@ def write_lognames(cwd, lognames):
         writer = pd.ExcelWriter('LogCoordinates.xlsx')
         df.to_excel(writer)
         writer.save()
-        
+
+'''
+    Reads the features:
+    Depth, Slowness, Bulk Density, Gamma Ray, Neutron Porosity and 
+    Deep Resistivity
+    from the data in las files
+    If any of these features is equal to -999.2500, that means data is
+    undefined for that depth, hence all the measurements in that depth
+    are ignored.
+'''
+def read_features(path):
+    # cd to LOGS folder from the logpath:
+    if "LOGS" in os.listdir(path):
+        path = os.path.join(path, "LOGS")
+
+    # reads the las file from the path into a dataframe.
+    # There is only one dir in the LOGS directory.
+    # The others were deleted manually.
+    # This needed to be done by a human to validate las file is well structured
+    # and meets the criteria of the project in various aspects. 
+    for dir in os.listdir(path):
+        laspath = os.path.join(path, dir)
+        las = lasio.read(laspath)
+        df = las.df()
+    
+    # Removes the columns other than Depth, Slowness, Bulk Density, Gamma Ray, 
+    # Neutron Porosity and Deep Resistivity:
+
+    # Removes bad data (-999.2500, explained in the function definition):
+
+    return df
+
+
 def main():
     cwd = os.getcwd()
-    lognames, logpaths = read__logname(cwd)
-    print(len(lognames))
-    write_lognames(cwd, lognames)
+    lognames, logpaths = read_lognames(cwd)
+    print(lognames[0], logpaths[0])
+    read_features(logpaths[0])
 
 
 if __name__ == '__main__':
