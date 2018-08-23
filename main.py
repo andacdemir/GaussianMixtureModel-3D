@@ -134,7 +134,7 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters):
     
     ztop=logs[:,0].min(); zbot=logs[:,0].max()
     
-    cluster1 = np.repeat(np.expand_dims(logs[:,6],1), 100, 1)
+    cluster1 = np.repeat(np.expand_dims(logs[:,4],1), 100, 1)
     #cluster2 = np.repeat(np.expand_dims(logs[arg_2].values,1), 100, 1)
     
     f, ax = plt.subplots(nrows=1, ncols=6, figsize=(9, 12))
@@ -146,7 +146,7 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters):
     #im2 = ax[4].imshow(cluster2, interpolation='none', aspect='auto',
                     #cmap=cmap_facies,vmin=1,vmax=9)
     
-    divider = make_axes_locatable(ax[5])
+    divider = make_axes_locatable(ax[3])
     cax = divider.append_axes("right", size="20%", pad=0.05)
     cbar = plt.colorbar(im1, cax=cax)
     #cbar.set_label((17*' ').join([' 1 ', ' 2 ', ' 3 ', 
