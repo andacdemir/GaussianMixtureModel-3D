@@ -141,6 +141,10 @@ def main():
     # Concatenates all the dataframes
     df = pd.concat(frames)
     print(tabulate(df, headers='keys', tablefmt='psql'))
+    # Saves the dataframe as an excel file
+    writer = pd.ExcelWriter('Processed_LogData.xlsx')
+    df.to_excel(writer)
+    writer.save()
 
 
 if __name__ == '__main__':
