@@ -140,17 +140,15 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters):
     f, ax = plt.subplots(nrows=1, ncols=6, figsize=(9, 12))
     ax[0].plot(logs[:,1], logs[:,0], '-g')
     ax[1].plot(logs[:,2], logs[:,0], '-')
-    ax[2].plot(logs[:,3], logs[:,0], '-', color='0.5')
-    ax[3].plot(logs[:,4], logs[:,0], '-', color='r')
-    ax[4].plot(logs[:,5], logs[:,0], '-', color='black')
-    im1 = ax[5].imshow(cluster1, interpolation='none', aspect='auto',
+    ax[2].plot(logs[:,3], logs[:,0], '-', color='r')
+    im1 = ax[3].imshow(cluster1, interpolation='none', aspect='auto',
                     cmap=cmap_facies,vmin=1,vmax=num_clusters)
-    #im2 = ax[6].imshow(cluster2, interpolation='none', aspect='auto',
+    #im2 = ax[4].imshow(cluster2, interpolation='none', aspect='auto',
                     #cmap=cmap_facies,vmin=1,vmax=9)
     
     divider = make_axes_locatable(ax[5])
     cax = divider.append_axes("right", size="20%", pad=0.05)
-    cbar=plt.colorbar(im1, cax=cax)
+    cbar = plt.colorbar(im1, cax=cax)
     #cbar.set_label((17*' ').join([' 1 ', ' 2 ', ' 3 ', 
                                 #' 4 ', ' 5 ', ' 6 ', ' 7 ', 
                                 #' 8 ', ' 9 ', ' 10 ',' 11 ',' 12 ',' 13 ',' 14 ',' 15 ']))
@@ -163,35 +161,27 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters):
         ax[i].grid()
         ax[i].locator_params(axis='x', nbins=3)
     
-    ax[0].set_xlabel("Sonic")
+    ax[0].set_xlabel("GR")
     ax[0].set_xlim(logs[:,1].min(),logs[:,1].max())
-    ax[1].set_xlabel("density")
+    ax[1].set_xlabel("Neutron Por")
     ax[1].set_xlim(logs[:,2].min(),logs[:,2].max())
-    ax[2].set_xlabel("GR")
+    ax[2].set_xlabel("Density")
     ax[2].set_xlim(logs[:,3].min(),logs[:,3].max())
-    ax[3].set_xlabel("Neutron Por")
-    ax[3].set_xlim(logs[:,4].min(),logs[:,4].max())
-    ax[4].set_xlabel("Resistivity")
-    ax[4].set_xlim(logs[:,5].min(),logs[:,5].max())
-    ax[5].set_xlabel(arg_1)
-    #ax[6].set_xlabel(arg_2)
+    ax[3].set_xlabel(arg_1)
+    #ax[4].set_xlabel(arg_2)
     
     ax[1].set_yticklabels([]); ax[2].set_yticklabels([]); ax[3].set_yticklabels([])
-    ax[4].set_yticklabels([]); ax[5].set_yticklabels([])
-    ax[5].set_xticklabels([])
-    #ax[6].set_xticklabels([])
-    f.suptitle('B15_5-6', fontsize=14,y=0.94)
+    ax[3].set_xticklabels([])
+    #ax[4].set_xticklabels([])
+    f.suptitle('B15_Data', fontsize=14, y=0.94)
     
     plt.show()
 
 def main():
     B15_data, feature_vectors = read_data()
-    print(feature_vectors[:5,:])
-    print(B15_data[:5,:])
     scaled_features = standardize(feature_vectors)
-    bic_mean_cluster, der_1st, der_2nd = compute_BIC(scaled_features)
-    plot_BIC(bic_mean_cluster, der_1st, der_2nd)
-    '''
+    #bic_mean_cluster, der_1st, der_2nd = compute_BIC(scaled_features)
+    #plot_BIC(bic_mean_cluster, der_1st, der_2nd)
     num_clusters = 8                
     y_pred = validate_GMM(scaled_features, num_clusters, 
                           covariance_type='full')
@@ -211,7 +201,7 @@ def main():
     blind[:,4] = y_pred
     compare_facies_plot_VMG(blind, 'classification', facies_colors, 
                             num_clusters)
-    '''
+  
 
 if __name__ == "__main__":
     main()
