@@ -4,6 +4,7 @@ from glob import glob
 import pandas as pd
 import lasio
 from shutil import rmtree
+from tabulate import tabulate
 
 '''
     Reads the log names and log paths from the current working directory
@@ -88,7 +89,7 @@ def delete_las_files(logpaths):
     NEUTRON POROSITY -> NEUT, CN, CNC, NPHI, NEU
     BULK DENSITY -> DEN, ZDEN, RHOB
 '''
-def read_features(path):
+def read_features(path, name, coords):
     # cd to LOGS folder from the logpath:
     if "LOGS" in os.listdir(path):
         path = os.path.join(path, "LOGS")
@@ -110,23 +111,36 @@ def read_features(path):
     features = ['DEPT.M', 'GR', 'NEUT', 'CN', 'CNC', 'NPHI', 'NEU', 'DEN', 
                 'RHOB', 'ZDEN']
     df = df.filter(features)
-
     # Removes bad data (-999.2500, explained in the function definition):
     df = df.dropna()
+    # Renames some of the 4 columns:
+    df.columns = ["Gamma Ray", "Neutron Porosity", "Bulk Density"]
+    # Gets latitude and longitude of the wellbores and adds them to
+    # the dataframe
+    df['Latitude'] = pd.Series(coords.at[name,"Latitude"], index=df.index)
+    df['Longitude'] = pd.Series(coords.at[name,"Longitude"], index=df.index)
+    # Adds a new column to the end, that is the log's name (id):
+    df['Log Name'] = pd.Series(name, index=df.index)
     return df
 
 def main():
     cwd = os.getcwd()
     lognames, logpaths = read_lognames(cwd)
-    print(len(lognames))
-    print(lognames[0], logpaths[0])
+    print("Total number of logs:", len(lognames))
     delete_subdirectories(logpaths)
     delete_las_files(logpaths)
-    for path in logpaths:
+
+    coords = pd.read_excel('LogCoordinates.xlsx')
+    frames = []
+    for name, path in zip(lognames, logpaths):
         print(path)
-        df = read_features(path)
-        print(df.head())
+        df = read_features(path, name, coords)
+        frames.append(df)
+        print(tabulate(df.head(), headers='keys', tablefmt='psql'))
     
+    # Concatenates all the dataframes
+    df = pd.concat(frames)
+    print(tabulate(df, headers='keys', tablefmt='psql'))
 
 
 if __name__ == '__main__':
