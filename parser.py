@@ -114,18 +114,22 @@ def read_features(path, name, coords):
     # Removes bad data (-999.2500, explained in the function definition):
     df = df.dropna()
     # Renames some of the 4 columns:
-    df.columns = ["Gamma Ray", "Neutron Porosity", "Bulk Density"]
-    # For the logs neutron porosity is a fraction (0-1), 
-    # converts them to percentage
-    if name in ["15_6-12", "15_12-19", "15_12-23", "15_6-4", "15_12-24", 
+    df.columns = ["Gamma_Ray", "Neutron_Porosity", "Bulk_Density"]
+    # For the logs neutron porosity is not a fraction (0-1), 
+    # converts them to fraction
+    if name not in ["15_6-12", "15_12-19", "15_12-23", "15_6-4", "15_12-24", 
                 "15_9-24", "15_9-5", "15_9-4"]:
-        df["Neutron Porosity"] *= 100
+        df["Neutron_Porosity"] /= 100
+    # Removes bad measurements, keeps the good ones:
+    df = df[(df.Gamma_Ray > 0) & (df.Gamma_Ray < 300) & 
+            (df.Neutron_Porosity > 0) & (df.Neutron_Porosity < 0.5) &
+            (df.Bulk_Density > 0)]
     # Gets latitude and longitude of the wellbores and adds them to
     # the dataframe
     df['Latitude'] = pd.Series(coords.at[name,"Latitude"], index=df.index)
     df['Longitude'] = pd.Series(coords.at[name,"Longitude"], index=df.index)
     # Adds a new column to the end, that is the log's name (id):
-    df['Log Name'] = pd.Series(name, index=df.index)
+    df['Log_Name'] = pd.Series(name, index=df.index)
     return df
 
 def main():
