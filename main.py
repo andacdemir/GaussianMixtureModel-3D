@@ -141,13 +141,6 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     cluster1 = np.repeat(np.expand_dims(logs[:,4],1), 100, 1)
     
     f, ax = plt.subplots(nrows=1, ncols=4, figsize=(9, 12))
-    # Creates a legend for latitude and longitude:
-    # these are matplotlib.patch.Patch properties
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-    textstr = '\n'.join((r'$\mathrm{Latitude}=%.5f$' % (labels[0], ),
-                         r'$\mathrm{Longitude}=%.5f$' % (labels[1], )))
-    # places a text box in upper left in axes coords
-    plt.text(1, 1, textstr, fontsize=14, bbox=props)
     ax[0].plot(logs[:,1], logs[:,0], '-g')
     ax[1].plot(logs[:,2], logs[:,0], '-')
     ax[2].plot(logs[:,3], logs[:,0], '-', color='r')
@@ -174,8 +167,10 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     
     ax[1].set_yticklabels([]); ax[2].set_yticklabels([]) 
     ax[3].set_yticklabels([]); ax[3].set_xticklabels([])
-
-    f.suptitle("Well ID: %s" %labels[-1], fontsize=14, y=0.94)    
+    textstr = '\n'.join((r'WELL ID: %s' % (labels[-1], ),
+                         r'$\mathrm{Latitude}: %.8f$' % (labels[0], ),
+                         r'$\mathrm{Longitude}: %.8f$' % (labels[1], )))
+    f.suptitle(textstr)    
     plt.show()
 
 def main():
@@ -183,7 +178,7 @@ def main():
     scaled_features = standardize(feature_vectors)
     # bic_mean_cluster, der_1st, der_2nd = compute_BIC(scaled_features)
     # plot_BIC(bic_mean_cluster, der_1st, der_2nd)
-    num_clusters = 2      
+    num_clusters = 8      
     d = validate_GMM(B15_data, scaled_features, num_clusters, 
                           covariance_type='full')
     
