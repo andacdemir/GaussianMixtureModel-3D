@@ -113,7 +113,6 @@ def validate_GMM(B15_data, scaled_features, num_clusters,
     X_train, X_test, y_train, y_test = train_test_split(scaled_features, 
                                                         y_pred, test_size=0.1,
                                                         random_state=42)
-
     clf = svm.SVC(C=10, gamma=1)
     clf.fit(X_train, y_train)
     predicted_labels = clf.predict(X_test)
@@ -127,7 +126,13 @@ def validate_GMM(B15_data, scaled_features, num_clusters,
     print('Facies classification accuracy: %f' % get_accuracy(conf))
     # return a dictionary with keys being the log names and 
     # facies classificaton predictions being the values. 
-    d = dict(zip(B15_data[:,-1], y_pred))
+    d = dict()
+    for key, value in zip(B15_data[:,-1], y_pred):
+        if key in d.keys():
+            d[key].append(value)
+        else:
+            d[key] = []
+            d[key].append(value)
     return d
 
 def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels): 
@@ -176,9 +181,9 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
 def main():
     B15_data, feature_vectors = read_data()
     scaled_features = standardize(feature_vectors)
-    # bic_mean_cluster, der_1st, der_2nd = compute_BIC(scaled_features)
-    # plot_BIC(bic_mean_cluster, der_1st, der_2nd)
-    num_clusters = 8      
+    #bic_mean_cluster, der_1st, der_2nd = compute_BIC(scaled_features)
+    #plot_BIC(bic_mean_cluster, der_1st, der_2nd)
+    num_clusters = 8     
     d = validate_GMM(B15_data, scaled_features, num_clusters, 
                           covariance_type='full')
     
