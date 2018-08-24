@@ -139,7 +139,6 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     ztop=logs[:,0].min(); zbot=logs[:,0].max()
     
     cluster1 = np.repeat(np.expand_dims(logs[:,4],1), 100, 1)
-    # cluster2 = np.repeat(np.expand_dims(logs[arg_2].values,1), 100, 1)
     
     f, ax = plt.subplots(nrows=1, ncols=4, figsize=(9, 12))
     # Creates a legend for latitude and longitude:
@@ -147,25 +146,18 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
     textstr = '\n'.join((r'$\mathrm{Latitude}=%.5f$' % (labels[0], ),
                          r'$\mathrm{Longitude}=%.5f$' % (labels[1], )))
-    # place a text box in upper left in axes coords
-    plt.text(-1, -1, textstr, fontsize=14, verticalalignment='top', 
-             bbox=props)
+    # places a text box in upper left in axes coords
+    plt.text(1, 1, textstr, fontsize=14, bbox=props)
     ax[0].plot(logs[:,1], logs[:,0], '-g')
     ax[1].plot(logs[:,2], logs[:,0], '-')
     ax[2].plot(logs[:,3], logs[:,0], '-', color='r')
     im1 = ax[3].imshow(cluster1, interpolation='none', aspect='auto',
                        cmap=cmap_facies,vmin=1,vmax=num_clusters)
-    # im2 = ax[4].imshow(cluster2, interpolation='none', aspect='auto',
-    #                    cmap=cmap_facies,vmin=1,vmax=9)
-    
+        
     divider = make_axes_locatable(ax[3])
     cax = divider.append_axes("right", size="20%", pad=0.05)
     cbar = plt.colorbar(im1, cax=cax)
-    # cbar.set_label((17*' ').join(['1', '2', '3', '4', '5', '6', '7', 
-    #                               '8', '9', '10','11','12', '13','14','15']))
-    # cbar.set_ticks(range(0,1)) 
-    # cbar.set_ticklabels('')
-    
+        
     for i in range(len(ax)-1):
         ax[i].set_ylim(ztop,zbot)
         ax[i].invert_yaxis()
