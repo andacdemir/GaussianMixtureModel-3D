@@ -118,7 +118,7 @@ def read_features(path, name, coords):
     # For the logs neutron porosity is not a fraction (0-1), 
     # converts them to fraction
     if name not in ["15_6-12", "15_12-19", "15_12-23", "15_6-4", "15_12-24", 
-                "15_9-24", "15_9-5", "15_9-4"]:
+                    "15_9-24", "15_9-5", "15_9-4"]:
         df["Neutron_Porosity"] /= 100
     # Removes bad measurements, keeps the good ones:
     df = df[(df.Gamma_Ray > 0) & (df.Gamma_Ray < 300) & 

@@ -46,7 +46,7 @@ def derivatives_calc(bic_mean_cluster):
     Computes the Bayesian Inference Criterion for different number of clusters
     Additionally, computes the first and second derivatives of them
 '''
-def compute_BIC(scaled_features, covariance_type='full', max_clusters=20):
+def compute_BIC(scaled_features, covariance_type='full', max_clusters=10):
     cluster_ref = range(1, max_clusters) 
     iters = 10 # number of iterations
 
@@ -70,7 +70,7 @@ def compute_BIC(scaled_features, covariance_type='full', max_clusters=20):
     Plots the BIC values corresponding to each cluster
     Additionally plots the first and second derivatives of the BIC curve 
 '''
-def plot_BIC(bic_mean_cluster, der_1st, der_2nd, max_clusters=16):
+def plot_BIC(bic_mean_cluster, der_1st, der_2nd, max_clusters=10):
     plt.figure(figsize=(20,10))
 
     plt.subplot(3,2,1)
@@ -104,7 +104,8 @@ def get_accuracy(confusion_matrix):
     
     return acc
 
-def validate_GMM(scaled_features, num_clusters, covariance_type='full'):
+def validate_GMM(B15_data, scaled_features, num_clusters, 
+                 covariance_type='full'):
     clf = mixture.GaussianMixture(num_clusters, covariance_type)\
                                              .fit(scaled_features)
     y_pred = clf.predict(scaled_features)
@@ -124,9 +125,12 @@ def validate_GMM(scaled_features, num_clusters, covariance_type='full'):
     conf = confusion_matrix(y_test, predicted_labels)
     display_cm(conf, facies_labels_y_test, hide_zeros=True)
     print('Facies classification accuracy: %f' % get_accuracy(conf))
-    return y_pred
+    # return a dictionary with keys being the log names and 
+    # facies classificaton predictions being the values. 
+    d = dict(zip(B15_data[:,-1], y_pred))
+    return d
 
-def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters):
+def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels): 
     # make sure logs are sorted by depth
     # logs = logs.sort_values(by='Depth')
     cmap_facies = colors.ListedColormap(
@@ -138,11 +142,19 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters):
     # cluster2 = np.repeat(np.expand_dims(logs[arg_2].values,1), 100, 1)
     
     f, ax = plt.subplots(nrows=1, ncols=4, figsize=(9, 12))
+    # Creates a legend for latitude and longitude:
+    # these are matplotlib.patch.Patch properties
+    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    textstr = '\n'.join((r'$\mathrm{Latitude}=%.5f$' % (labels[0], ),
+                         r'$\mathrm{Longitude}=%.5f$' % (labels[1], )))
+    # place a text box in upper left in axes coords
+    plt.text(-1, -1, textstr, fontsize=14, verticalalignment='top', 
+             bbox=props)
     ax[0].plot(logs[:,1], logs[:,0], '-g')
     ax[1].plot(logs[:,2], logs[:,0], '-')
     ax[2].plot(logs[:,3], logs[:,0], '-', color='r')
     im1 = ax[3].imshow(cluster1, interpolation='none', aspect='auto',
-                    cmap=cmap_facies,vmin=1,vmax=num_clusters)
+                       cmap=cmap_facies,vmin=1,vmax=num_clusters)
     # im2 = ax[4].imshow(cluster2, interpolation='none', aspect='auto',
     #                    cmap=cmap_facies,vmin=1,vmax=9)
     
@@ -167,13 +179,11 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters):
     ax[2].set_xlabel("Bulk Density")
     ax[2].set_xlim(logs[:,3].min(),logs[:,3].max())
     ax[3].set_xlabel(arg_1)
-    # ax[4].set_xlabel(arg_2)
     
-    ax[1].set_yticklabels([]); ax[2].set_yticklabels([]); ax[3].set_yticklabels([])
-    ax[3].set_xticklabels([])
-    # ax[4].set_xticklabels([])
-    f.suptitle('B15_Dataset', fontsize=14, y=0.94)
-    
+    ax[1].set_yticklabels([]); ax[2].set_yticklabels([]) 
+    ax[3].set_yticklabels([]); ax[3].set_xticklabels([])
+
+    f.suptitle("Well ID: %s" %labels[-1], fontsize=14, y=0.94)    
     plt.show()
 
 def main():
@@ -181,25 +191,32 @@ def main():
     scaled_features = standardize(feature_vectors)
     # bic_mean_cluster, der_1st, der_2nd = compute_BIC(scaled_features)
     # plot_BIC(bic_mean_cluster, der_1st, der_2nd)
-    num_clusters = 8                
-    y_pred = validate_GMM(scaled_features, num_clusters, 
+    num_clusters = 2      
+    d = validate_GMM(B15_data, scaled_features, num_clusters, 
                           covariance_type='full')
     
     facies_colors = ['#FFE500', '#d2b48c','#DC7633','#6E2C00', '#FF0000', 
                      '#0000FF', '#00FFFF', '#a45dbd', '#187e03','#000000', 
                      '#dffbd7', '#fd3acd', '#f9d7f3', '#808080', '#ffffff']
     facies_labels = ['1', '2', '3', '4', '5', '6', '7','8', '9','10',
-                     '11','12','13','14','15']
+                     '11', '12', '13', '14', '15']
     facies_color_map = {}
     for ind, label in enumerate(facies_labels[0:num_clusters]):
         facies_color_map[label] = facies_colors[ind]
 
-    blind=np.zeros((feature_vectors.shape[0],feature_vectors.shape[1]+2)*1) 
-    blind[:,0] = B15_data[:,0]
-    blind[:,1:4] = feature_vectors
-    blind[:,4] = y_pred
-    compare_facies_plot_VMG(blind, 'classification', facies_colors, 
-                            num_clusters)
+    for key in d:
+        indices = [i for i, x in enumerate(B15_data[:,-1]) if x == key]      
+        start, end = indices[0], indices[-1]
+        n_rows = end - start + 1
+        blind = np.zeros((n_rows, feature_vectors.shape[1]+2)*1) 
+        blind[:,0] = B15_data[start:end+1,0]
+        blind[:,1:4] = feature_vectors[start:end+1,:]
+        blind[:,4] = d[key]
+        lat, lon = B15_data[start, 4], B15_data[start, 5]
+        name = B15_data[start, -1]
+        labels = [lat, lon, name]
+        compare_facies_plot_VMG(blind, 'classification', facies_colors, 
+                                num_clusters, labels)
   
 
 if __name__ == "__main__":
