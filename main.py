@@ -1,15 +1,16 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from sklearn.preprocessing import StandardScaler
 from sklearn import mixture
 from sklearn import svm
 from sklearn.metrics import classification_report
-from  sklearn.cross_validation import train_test_split
+from sklearn.cross_validation import train_test_split
 from sklearn.metrics import confusion_matrix
 from classification_utilities import display_cm, display_adj_cm
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 
 '''
     Reads the processed datasets (las files)
@@ -46,22 +47,21 @@ def derivatives_calc(bic_mean_cluster):
     Computes the Bayesian Inference Criterion for different number of clusters
     Additionally, computes the first and second derivatives of them
 '''
-def compute_BIC(scaled_features, covariance_type='full', max_clusters=10):
-    cluster_ref = range(1, max_clusters) 
+def compute_BIC(scaled_features, covariance_type='full', max_clusters=12):
+    cluster_ref = np.arange(1, max_clusters+1)
     iters = 10 # number of iterations
 
     bic_mean_cluster = np.zeros((len(cluster_ref),)*1) 
     bic_std_cluster = np.zeros((len(cluster_ref),)*1) 
 
-    for i in range(len(cluster_ref)):  
-        print(i)
+    for i in tqdm(range(max_clusters)):  
         bic = []
         for _ in range(iters):
-            gmm = mixture.GaussianMixture(cluster_ref[i], covariance_type)\
-                                                     .fit(scaled_features)
+            gmm = mixture.GaussianMixture(cluster_ref[i-1], covariance_type)\
+                                                       .fit(scaled_features)
             bic.append(gmm.bic(scaled_features))
-        bic_mean_cluster[i] = np.mean(bic)
-        bic_std_cluster[i] = np.std(bic)
+        bic_mean_cluster[i-1] = np.mean(bic)
+        bic_std_cluster[i-1] = np.std(bic)
 
     der_1st, der_2nd = derivatives_calc(bic_mean_cluster)
     return bic_mean_cluster, der_1st, der_2nd   
@@ -70,24 +70,25 @@ def compute_BIC(scaled_features, covariance_type='full', max_clusters=10):
     Plots the BIC values corresponding to each cluster
     Additionally plots the first and second derivatives of the BIC curve 
 '''
-def plot_BIC(bic_mean_cluster, der_1st, der_2nd, max_clusters=10):
+def plot_BIC(bic_mean_cluster, der_1st, der_2nd, max_clusters=10):    
     plt.figure(figsize=(20,10))
 
-    plt.subplot(3,2,1)
-    plt.plot(bic_mean_cluster, marker='o')
+    plt.subplot(321, facecolor='darkslategray')
+    plt.plot(bic_mean_cluster, 'C1', marker='o')
     plt.xlim(1, max_clusters)
-    plt.ylabel("BIC")
+    plt.ylabel("BIC", color='C1')
 
-    plt.subplot(3,2,3)
-    plt.plot(der_1st, marker='o')
+    plt.subplot(323, facecolor='darkslategray')
+    plt.plot(der_1st, 'C1', marker='o')
     plt.xlim(1, max_clusters)
-    plt.ylabel("1st derivative")
+    plt.ylabel("1st derivative", color='C1')
 
-    plt.subplot(3,2,5)
-    plt.plot(der_2nd, marker='o')
+    plt.subplot(325, facecolor='darkslategray')
+    plt.plot(der_2nd, 'C1', marker='o')
     plt.xlim(1, max_clusters)
-    plt.ylabel("2nd derivative")
+    plt.ylabel("2nd derivative", color='C1')
 
+    plt.savefig('BIC_firstder_secondder.png')
     plt.show()
 
 '''
@@ -98,7 +99,7 @@ def plot_BIC(bic_mean_cluster, der_1st, der_2nd, max_clusters=10):
 def get_accuracy(confusion_matrix):
     total_correct = 0.
     num_classes = confusion_matrix.shape[0]
-    for i in np.arange(num_classes):
+    for i in range(num_classes):
         total_correct += confusion_matrix[i][i]
     acc = total_correct/sum(sum(confusion_matrix))
     
@@ -142,7 +143,6 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
             facies_colors[0:len(facies_colors[0:num_clusters])], 'indexed')
     
     ztop=logs[:,0].min(); zbot=logs[:,0].max()
-    
     cluster1 = np.repeat(np.expand_dims(logs[:,4],1), 100, 1)
     
     f, ax = plt.subplots(nrows=1, ncols=4, figsize=(9, 12))
@@ -150,11 +150,12 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     ax[1].plot(logs[:,2], logs[:,0], '-')
     ax[2].plot(logs[:,3], logs[:,0], '-', color='r')
     im1 = ax[3].imshow(cluster1, interpolation='none', aspect='auto',
-                       cmap=cmap_facies,vmin=1,vmax=num_clusters)
+                       cmap=cmap_facies, vmin=1, vmax=num_clusters)
         
     divider = make_axes_locatable(ax[3])
     cax = divider.append_axes("right", size="20%", pad=0.05)
-    cbar = plt.colorbar(im1, cax=cax)
+    cbar = plt.colorbar(im1, cax=cax, 
+                        ticks=[x+1 for x in list(range(num_clusters))])
         
     for i in range(len(ax)-1):
         ax[i].set_ylim(ztop,zbot)
@@ -172,9 +173,9 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     
     ax[1].set_yticklabels([]); ax[2].set_yticklabels([]) 
     ax[3].set_yticklabels([]); ax[3].set_xticklabels([])
-    textstr = '\n'.join((r'WELL ID: %s' % (labels[-1], ),
-                         r'$\mathrm{Latitude}: %.8f$' % (labels[0], ),
-                         r'$\mathrm{Longitude}: %.8f$' % (labels[1], )))
+    textstr = '\n'.join((r'WELL ID: %s' % (labels[-1],),
+                         r'$\mathrm{Latitude}: %.8f$' % (labels[0],),
+                         r'$\mathrm{Longitude}: %.8f$' % (labels[1],)))
     f.suptitle(textstr)   
     plt.savefig('results\%s.pdf'%(labels[-1]))
     plt.show()
@@ -184,9 +185,9 @@ def main():
     scaled_features = standardize(feature_vectors)
     #bic_mean_cluster, der_1st, der_2nd = compute_BIC(scaled_features)
     #plot_BIC(bic_mean_cluster, der_1st, der_2nd)
-    num_clusters = 8     
+    num_clusters = 5   
     d = validate_GMM(B15_data, scaled_features, num_clusters, 
-                          covariance_type='full')
+                     covariance_type='full')
     
     facies_colors = ['#FFE500', '#d2b48c','#DC7633','#6E2C00', '#FF0000', 
                      '#0000FF', '#00FFFF', '#a45dbd', '#187e03','#000000', 
