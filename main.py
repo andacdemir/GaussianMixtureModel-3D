@@ -143,7 +143,7 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
             facies_colors[0:len(facies_colors[0:num_clusters])], 'indexed')
     
     ztop = logs[:,0].min(); zbot=logs[:,0].max()
-    cluster1 = np.repeat(np.expand_dims(logs[:,4],1), 100, 1)
+    cluster1 = np.expand_dims(logs[:,4],1)
     
     f, ax = plt.subplots(nrows=1, ncols=4, figsize=(9, 12))
     ax[0].scatter(logs[:,1], logs[:,0], s=.1, color='r')
