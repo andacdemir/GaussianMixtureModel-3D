@@ -112,6 +112,7 @@ def read_features(path, name, coords):
                 'RHOB', 'ZDEN']
     df = df.filter(features)
     # Removes bad data (-999.2500, explained in the function definition):
+    df = df.replace(-999.2500, pd.np.nan)   
     df = df.dropna()
     # Renames some of the 4 columns:
     df.columns = ["Gamma_Ray", "Neutron_Porosity", "Bulk_Density"]

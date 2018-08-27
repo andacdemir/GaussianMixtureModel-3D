@@ -175,7 +175,8 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     textstr = '\n'.join((r'WELL ID: %s' % (labels[-1], ),
                          r'$\mathrm{Latitude}: %.8f$' % (labels[0], ),
                          r'$\mathrm{Longitude}: %.8f$' % (labels[1], )))
-    f.suptitle(textstr)    
+    f.suptitle(textstr)   
+    plt.savefig('results\%s.pdf'%(labels[-1]))
     plt.show()
 
 def main():
