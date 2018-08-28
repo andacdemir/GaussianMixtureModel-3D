@@ -146,9 +146,9 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     cluster1 = np.expand_dims(logs[:,4],1)
     
     f, ax = plt.subplots(nrows=1, ncols=4, figsize=(9, 12))
-    ax[0].scatter(logs[:,1], logs[:,0], s=.1, color='r')
-    ax[1].scatter(logs[:,2], logs[:,0], s=.1, color='g')
-    ax[2].scatter(logs[:,3], logs[:,0], s=.1, color='b')
+    ax[0].plot(logs[:,1], logs[:,0], color='r')
+    ax[1].plot(logs[:,2], logs[:,0], color='g')
+    ax[2].plot(logs[:,3], logs[:,0], color='b')
    
     im1 = ax[3].imshow(cluster1, interpolation='none', aspect='auto',
                        cmap=cmap_facies, vmin=1, vmax=num_clusters)     
@@ -161,7 +161,7 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     # of the formation:
     for i in range(len(logs[:,-1])):
         if i == 0:
-            print("Welllog ID: %s" %logs[0,-1])
+            print("Welllog ID: %s" %labels[-1])
         print("Depth: %.3f Facies Classification %d" %(logs[i,0], logs[i,4]))
 
     for i in range(len(ax)-1):
@@ -187,6 +187,24 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     plt.savefig('results\%s.pdf'%(labels[-1]))
     plt.show()
 
+'''
+    Plots the distribution of the training data by facies.
+    Takes d as an argument which is a dictionary with keys being the 
+    lognames and values being the facies classified at different depths.
+'''
+def plt_facies_distribution(d, num_clusters):
+    # counts the number of occurrences of facies as a value in the dictionary
+    # appends them in a list
+    classes = list(range(1, num_clusters+1))
+    occurs = []
+    facies = [i for j in list(d.values()) for i in j]
+    for i in range(num_clusters):
+        occurs.append(facies.count(i+1))
+
+    df = pd.DataFrame({'Facies': classes,'Occurrence': occurs})
+    ax = df.plot.bar(x='Facies', y='Occurrence', 
+                     title='Distribution of Training Data by Facies')
+
 def main():
     B15_data, feature_vectors = read_data()
     scaled_features = standardize(feature_vectors)
@@ -195,7 +213,8 @@ def main():
     num_clusters = 5  
     d = validate_GMM(B15_data, scaled_features, num_clusters, 
                      covariance_type='full')
-    
+    plt_facies_distribution(d, num_clusters)
+
     facies_colors = ['#FFE500', '#d2b48c','#DC7633','#6E2C00', '#FF0000', 
                      '#0000FF', '#00FFFF', '#a45dbd', '#187e03','#000000', 
                      '#dffbd7', '#fd3acd', '#f9d7f3', '#808080', '#ffffff']
