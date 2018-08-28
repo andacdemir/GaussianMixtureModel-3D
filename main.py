@@ -157,6 +157,13 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     cbar = plt.colorbar(im1, cax=cax, 
                         ticks=[x+1 for x in list(range(num_clusters))])
         
+    # Prints the log id, well depth and correcsponding classification
+    # of the formation:
+    for i in range(len(logs[:,-1])):
+        if i == 0:
+            print("Welllog ID: %s" %logs[0,-1])
+        print("Depth: %.3f Facies Classification %d" %(logs[i,0], logs[i,4]))
+
     for i in range(len(ax)-1):
         ax[i].set_ylim(ztop,zbot)
         ax[i].invert_yaxis()

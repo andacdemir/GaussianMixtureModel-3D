@@ -77,6 +77,31 @@ def delete_las_files(logpaths):
                 os.remove(os.path.join(path, dir))
 
 '''
+    Helper function for read_features.
+    Some log data has discontinuities for hundreds of meters between 
+    2 valid measurements (-999.2500).
+    That affects the success rate of the Gaussian Mixture Model's fitting.
+    This truncates the dataframe from the discontinuity.
+'''
+def remove_discontinuities(df, name):
+    names1 = ["15_3-2", "15_5-3", "15_6-12", "15_6-3"]
+    thold1 = [4500, 3750, 3800, 2800]
+    d1 = dict(zip(names1, thold1))
+
+    names2 = ["15_3-3", "15_6-5"]
+    thold2 = [4570, 2850]
+    d2 = dict(zip(names2, thold2))
+    
+    if name in d1.keys():
+        df = df[(df.index < d1[name])]
+    elif name in d2.keys():
+        df = df[(df.index > d2[name])]
+    else:
+        pass
+
+    return df
+
+'''
     Reads the features:
     Depth, Slowness, Bulk Density, Gamma Ray, Neutron Porosity and 
     Deep Resistivity
@@ -121,6 +146,10 @@ def read_features(path, name, coords):
     if name not in ["15_6-12", "15_12-19", "15_12-23", "15_6-4", "15_12-24", 
                     "15_9-24", "15_9-5", "15_9-4"]:
         df["Neutron_Porosity"] /= 100
+    
+    # Removes discontinuities:
+    df = remove_discontinuities(df, name) 
+    
     # Removes bad measurements, keeps the good ones:
     df = df[(df.Gamma_Ray > 0) & (df.Gamma_Ray < 300) & 
             (df.Neutron_Porosity > 0) & (df.Neutron_Porosity < 0.5) &
