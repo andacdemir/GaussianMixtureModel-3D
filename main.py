@@ -11,6 +11,7 @@ from classification_utilities import display_cm, display_adj_cm
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+import seaborn as sns
 
 '''
     Reads the processed datasets (las files)
@@ -136,6 +137,14 @@ def validate_GMM(B15_data, scaled_features, num_clusters,
             d[key].append(value)
     return d
 
+'''
+    Gets the dictionary d and returns all the facies in the entire
+    dataset in an order as list:
+'''
+def get_facies(d):
+    facies = [i for j in list(d.values()) for i in j]
+    return facies
+
 def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels): 
     # make sure logs are sorted by depth
     # logs = logs.sort_values(by='Depth')
@@ -192,18 +201,60 @@ def compare_facies_plot_VMG(logs, arg_1, facies_colors, num_clusters, labels):
     Takes d as an argument which is a dictionary with keys being the 
     lognames and values being the facies classified at different depths.
 '''
-def plt_facies_distribution(d, num_clusters):
+def plt_facies_distribution(facies, num_clusters):
     # counts the number of occurrences of facies as a value in the dictionary
     # appends them in a list
     classes = list(range(1, num_clusters+1))
     occurs = []
-    facies = [i for j in list(d.values()) for i in j]
     for i in range(num_clusters):
         occurs.append(facies.count(i+1))
 
     df = pd.DataFrame({'Facies': classes,'Occurrence': occurs})
     ax = df.plot.bar(x='Facies', y='Occurrence', 
                      title='Distribution of Training Data by Facies')
+
+def plt_3D(processed_data):
+    pass
+
+'''
+    scaled_features is a np.array with:
+    columns = [Gamma_Ray, Neutron_Porosity, Bulk_Density]
+    Plot:
+    GR vs Porosity
+    GR vs Density
+    Porosity vs Density
+    where facies are a cluster in the plot
+    There are more than 350K samples in the data, 
+    if truncate=True, only plots for 500 samples from the shuffled
+    dataframe.
+'''
+def plt_cross_correlation(scaled_features, facies, num_clusters, 
+                          truncate=True):
+    columns = ['Gamma Ray', 'Porosity', 'Density', 'FACIES']
+    facies = np.asarray(facies).reshape((len(facies),1))
+    data = np.concatenate((scaled_features, facies), axis=1) 
+    data = pd.DataFrame(data=data, columns=columns)
+
+    if truncate==True:
+        data = data.sample(frac=1) # shuffles the df randomly
+        data = data.head(500)      # slices first 500 samples of the df
+
+    # sets font size of labels on matplotlib plots
+    plt.rc('font', size=16)
+    # sets style of plots
+    sns.set_style('white')
+    # defines a custom palette
+    customPalette = ['#630C3A', '#39C8C6', '#D3500C', '#FFB139', '#0c6335']
+    sns.set_palette(customPalette)
+    sns.palplot(customPalette)
+    
+    # plots data with seaborn 
+    facet = sns.lmplot(data=data, x='Porosity', y='Gamma Ray', hue='FACIES', 
+                       fit_reg=False, legend=True, legend_out=True)
+    facet = sns.lmplot(data=data, x='Porosity', y='Density', hue='FACIES', 
+                       fit_reg=False, legend=True, legend_out=True)
+    facet = sns.lmplot(data=data, x='Density', y='Gamma Ray', hue='FACIES', 
+                       fit_reg=False, legend=True, legend_out=True)
 
 def main():
     B15_data, feature_vectors = read_data()
@@ -213,7 +264,9 @@ def main():
     num_clusters = 5  
     d = validate_GMM(B15_data, scaled_features, num_clusters, 
                      covariance_type='full')
-    plt_facies_distribution(d, num_clusters)
+    facies = get_facies(d)
+    plt_cross_correlation(scaled_features, facies, num_clusters)
+    plt_facies_distribution(facies, num_clusters)
 
     facies_colors = ['#FFE500', '#d2b48c','#DC7633','#6E2C00', '#FF0000', 
                      '#0000FF', '#00FFFF', '#a45dbd', '#187e03','#000000', 
