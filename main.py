@@ -328,8 +328,8 @@ def main():
     d = validate_GMM(B15_data, scaled_features, num_clusters, 
                      covariance_type='full')
     facies = get_facies(d)
-    plt_facies_distribution(facies, num_clusters)
-    plt_cross_correlation(scaled_features, facies, num_clusters)
+    #plt_facies_distribution(facies, num_clusters)
+    #plt_cross_correlation(scaled_features, facies, num_clusters)
     plt_3D(B15_data, facies, num_clusters)
 
     facies_colors = ['#FFE500', '#d2b48c','#DC7633','#6E2C00', '#FF0000', 
