@@ -12,6 +12,8 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import seaborn as sns
+import plotly.plotly as py
+import plotly.graph_objs as go
 
 '''
     Reads the processed datasets (las files)
@@ -139,7 +141,7 @@ def validate_GMM(B15_data, scaled_features, num_clusters,
 
 '''
     Gets the dictionary d and returns all the facies in the entire
-    dataset in an order as list:
+    dataset in an order as a np.array:
 '''
 def get_facies(d):
     facies = [i for j in list(d.values()) for i in j]
@@ -213,8 +215,69 @@ def plt_facies_distribution(facies, num_clusters):
     ax = df.plot.bar(x='Facies', y='Occurrence', 
                      title='Distribution of Training Data by Facies')
 
-def plt_3D(processed_data):
-    pass
+def plt_3D(B15_data, facies, num_clusters, truncate=True):
+    columns = ['Latitude', 'Longitude', 'Depth', 'Cluster']
+    n_samples = len(facies)
+    depths = np.asarray(B15_data[:,0]).reshape((n_samples,1))
+    facies = np.asarray(facies).reshape((n_samples,1))
+    df = np.concatenate((depths, B15_data[:,4:6], facies), axis=1)
+    df = pd.DataFrame(data=df, columns=columns)
+    if truncate==True:
+        df = df.sample(frac=1) # shuffles the df randomly
+        df = df.head(35000)    # slices first 35000 samples of the df
+
+    data = []
+    clusters = []
+    # Add more colors if num_clusters > 5 !!
+    colors = ['rgb(228,26,28)','rgb(55,126,184)','rgb(77,175,74)', 
+              'rgb(233,247,32)', 'rgb(0,0,0)']
+
+    for i in range(num_clusters):
+        name = df['Cluster'].unique()[i]
+        color = colors[i]
+        x = df[df['Cluster'] == name]['Latitude']
+        y = df[df['Cluster'] == name]['Longitude']
+        z = df[df['Cluster'] == name]['Depth']
+        
+        trace = dict(
+            name = name,
+            x=x, y=y, z=z,
+            type="scatter3d",    
+            mode='markers',
+            marker=dict(size=3, color=color, line=dict(width=0)))
+        data.append(trace)
+
+    layout = dict(
+        width=800,
+        height=550,
+        autosize=False,
+        title='Iris dataset',
+        scene=dict(
+            xaxis=dict(
+                gridcolor='rgb(255, 255, 255)',
+                zerolinecolor='rgb(255, 255, 255)',
+                showbackground=True,
+                backgroundcolor='rgb(230, 230,230)'
+            ),
+            yaxis=dict(
+                gridcolor='rgb(255, 255, 255)',
+                zerolinecolor='rgb(255, 255, 255)',
+                showbackground=True,
+                backgroundcolor='rgb(230, 230,230)'
+            ),
+            zaxis=dict(
+                gridcolor='rgb(255, 255, 255)',
+                zerolinecolor='rgb(255, 255, 255)',
+                showbackground=True,
+                backgroundcolor='rgb(230, 230,230)'
+            ),
+            aspectratio=dict(x=1,y=1,z=1),
+            aspectmode='manual'        
+        ),
+    )
+
+    fig = dict(data=data, layout=layout)
+    url = py.plot(fig, filename='Facies Classification 3D', validate=False)
 
 '''
     scaled_features is a np.array with:
@@ -265,8 +328,9 @@ def main():
     d = validate_GMM(B15_data, scaled_features, num_clusters, 
                      covariance_type='full')
     facies = get_facies(d)
-    plt_cross_correlation(scaled_features, facies, num_clusters)
-    plt_facies_distribution(facies, num_clusters)
+    #plt_facies_distribution(facies, num_clusters)
+    #plt_cross_correlation(scaled_features, facies, num_clusters)
+    plt_3D(B15_data, facies, num_clusters)
 
     facies_colors = ['#FFE500', '#d2b48c','#DC7633','#6E2C00', '#FF0000', 
                      '#0000FF', '#00FFFF', '#a45dbd', '#187e03','#000000', 
