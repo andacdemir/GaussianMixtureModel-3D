@@ -224,7 +224,7 @@ def plt_3D(B15_data, facies, num_clusters, truncate=True):
     df = pd.DataFrame(data=df, columns=columns)
     if truncate==True:
         df = df.sample(frac=1) # shuffles the df randomly
-        df = df.head(35000)    # slices first 35000 samples of the df
+        df = df.head(40000)    # slices first 35000 samples of the df
 
     data = []
     clusters = []
@@ -241,7 +241,7 @@ def plt_3D(B15_data, facies, num_clusters, truncate=True):
         
         trace = dict(
             name = name,
-            x=x, y=y, z=z,
+            x=y, y=z, z=x, # this had to be fixed
             type="scatter3d",    
             mode='markers',
             marker=dict(size=3, color=color, line=dict(width=0)))
@@ -249,9 +249,9 @@ def plt_3D(B15_data, facies, num_clusters, truncate=True):
 
     layout = dict(
         width=800,
-        height=550,
+        height=800,
         autosize=False,
-        title='Iris dataset',
+        title='3D Facies Classification',
         scene=dict(
             xaxis=dict(
                 gridcolor='rgb(255, 255, 255)',
@@ -328,8 +328,8 @@ def main():
     d = validate_GMM(B15_data, scaled_features, num_clusters, 
                      covariance_type='full')
     facies = get_facies(d)
-    #plt_facies_distribution(facies, num_clusters)
-    #plt_cross_correlation(scaled_features, facies, num_clusters)
+    plt_facies_distribution(facies, num_clusters)
+    plt_cross_correlation(scaled_features, facies, num_clusters)
     plt_3D(B15_data, facies, num_clusters)
 
     facies_colors = ['#FFE500', '#d2b48c','#DC7633','#6E2C00', '#FF0000', 
