@@ -2,4 +2,4 @@
 --Undisclosed--
 
 3D Model:
-[Plotly]: https://plot.ly/~andacdemir/8
+[Link for the 3D Model](https://plot.ly/~andacdemir/8)
